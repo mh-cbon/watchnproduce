@@ -1,5 +1,23 @@
 # Changelog - watchnproduce
 
+### 0.0.2
+
+__Changes__
+
+- release: run test
+- watcher(minor): Add new Interval property to set duration delay between checks
+- resources(break): change Stat.Id to Stat.ID
+- inputs(minor): add new callbacks to catch change and error events
+- tests(minor): add test to the package
+
+__Contributors__
+
+- mh-cbon
+
+Released by mh-cbon, Wed 04 Jan 2017 -
+[see the diff](https://github.com/mh-cbon/watchnproduce/compare/0.0.1...0.0.2#diff)
+______________
+
 ### 0.0.1
 
 __Changes__
