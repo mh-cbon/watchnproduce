@@ -13,24 +13,29 @@ type ResourcePointer interface {
 
 // Stat identify a resource with and Id, and provide its LastMod.
 type Stat struct {
-	Id  string
+	ID  string
 	Mod int64
 }
 
 // Stats is an useful wrapper of []Stat.
 type Stats []Stat
 
+// Contains tells if given Stat ID exists into
+// the current list of Stats.
 func (rlist Stats) Contains(s Stat) bool {
 	for _, r := range rlist {
-		if r.Id == s.Id {
+		if r.ID == s.ID {
 			return true
 		}
 	}
 	return false
 }
+
+// ContainsSame tells if given Stat ID and Mod
+// exists in the current list of Stats.
 func (rlist Stats) ContainsSame(s Stat) bool {
 	for _, r := range rlist {
-		if r.Id == s.Id && r.Mod == s.Mod {
+		if r.ID == s.ID && r.Mod == s.Mod {
 			return true
 		}
 	}
@@ -39,16 +44,17 @@ func (rlist Stats) ContainsSame(s Stat) bool {
 func (rlist Stats) String() string {
 	ret := ""
 	for _, s := range rlist {
-		ret += fmt.Sprintf("%v %v\n", s.Id, s.Mod)
+		ret += fmt.Sprintf("%v %v\n", s.ID, s.Mod)
 	}
 	return ret
 }
 
-//FilesPointer registers a list of file paths.
+// FilesPointer registers a list of file paths.
 type FilesPointer struct {
 	Files []string
 }
 
+// NewFilesPointer creates a new FilesPointer instance.
 func NewFilesPointer(files ...string) *FilesPointer {
 	return &FilesPointer{
 		Files: files,
@@ -66,7 +72,7 @@ func (p *FilesPointer) GetStats() ([]Stat, error) {
 			err = filepath.Walk(f, func(path string, info os.FileInfo, err error) error {
 				if err == nil {
 					ret = append(ret, Stat{
-						Id:  path,
+						ID:  path,
 						Mod: info.ModTime().Unix(),
 					})
 				}
@@ -82,6 +88,7 @@ type GlobsPointer struct {
 	Globs []string
 }
 
+// NewGlobsPointer creates a new instance of GlobsPointer.
 func NewGlobsPointer(globs ...string) *GlobsPointer {
 	return &GlobsPointer{
 		Globs: globs,
@@ -102,7 +109,7 @@ func (p *GlobsPointer) GetStats() ([]Stat, error) {
 					err = filepath.Walk(item, func(path string, info os.FileInfo, err error) error {
 						if err == nil {
 							ret = append(ret, Stat{
-								Id:  path,
+								ID:  path,
 								Mod: info.ModTime().Unix(),
 							})
 						}
