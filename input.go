@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// ProducerFunc is a type function which knows
+// ProducerFunc is a function type which knows
 // how to produce useful results given a list of PointResource
 type ProducerFunc func(pointers []ResourcePointer) (interface{}, error)
 
@@ -20,9 +20,11 @@ type Input struct {
 	LastValue         interface{}
 	LastErr           error
 	MarkedForDeletion bool
+	OnChanged         func(i *Input)
+	OnErrored         func(i *Input, err error)
 }
 
-// Add a ResourcePointer to this Input.
+// AddPointer adds a ResourcePointer to this Input.
 func (i *Input) AddPointer(p ResourcePointer) *Input {
 	i.lock.Lock()
 	i.Pointers = append(i.Pointers, p)
@@ -30,12 +32,12 @@ func (i *Input) AddPointer(p ResourcePointer) *Input {
 	return i
 }
 
-// Add a FilesPointer, a pointer to a list of file paths.
+// AddFiles adds a FilesPointer, a pointer to a list of file paths.
 func (i *Input) AddFiles(files ...string) *Input {
 	return i.AddPointer(NewFilesPointer(files...))
 }
 
-// Add a GlobsPointer, to a list of glob path.
+// AddGlob adds a GlobsPointer, to a list of glob path.
 func (i *Input) AddGlob(globs ...string) *Input {
 	return i.AddPointer(NewGlobsPointer(globs...))
 }
@@ -62,7 +64,6 @@ func (i *Input) GetStats() (Stats, error) {
 func (i *Input) Update(newStats Stats) {
 	i.lock.Lock()
 	i.LogFunc("Updating resource...")
-	i.KnownStats = newStats
 	value, err := i.Producer(i.Pointers)
 	if err != nil {
 		i.LogFunc("Failed to produce: %v", err)
@@ -71,9 +72,19 @@ func (i *Input) Update(newStats Stats) {
 	}
 	if i.LastValue == nil || err == nil {
 		i.LogFunc("Resource updated...")
+		i.KnownStats = newStats
 		i.LastValue = value
 		i.LastErr = err
+		if i.OnChanged != nil && err == nil {
+			i.OnChanged(i)
+		}
+		if i.OnErrored != nil && err != nil {
+			i.OnErrored(i, err)
+		}
 	} else {
+		if i.OnErrored != nil && err != nil {
+			i.OnErrored(i, err)
+		}
 		i.LogFunc("Resource not updated LastErr: %v, err: %v", i.LastErr, err)
 	}
 	i.lock.Unlock()
