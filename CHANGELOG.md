@@ -1,6 +1,6 @@
 # Changelog - watchnproduce
 
-### 0.0.2
+### 1.0.0
 
 __Changes__
 
@@ -15,7 +15,7 @@ __Contributors__
 - mh-cbon
 
 Released by mh-cbon, Wed 04 Jan 2017 -
-[see the diff](https://github.com/mh-cbon/watchnproduce/compare/0.0.1...0.0.2#diff)
+[see the diff](https://github.com/mh-cbon/watchnproduce/compare/0.0.1...1.0.0#diff)
 ______________
 
 ### 0.0.1
