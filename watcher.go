@@ -1,6 +1,5 @@
-// Watch n Produce is package
-// to watch for resources pointers
-// and produce a result anytime the resources changed.
+// Package watchnproduce watches for resources pointers
+// and produces a result anytime the resources changed.
 package watchnproduce
 
 import (
@@ -10,16 +9,19 @@ import (
 // Watcher keep tracks of registered inputs
 // and update their produce regularly.
 type Watcher struct {
-	Inputs  []*Input
-	closed  bool
-	LogFunc func(string, ...interface{})
+	Inputs   []*Input
+	closed   bool
+	LogFunc  func(string, ...interface{})
+	Interval int
 }
 
 func noop(s string, g ...interface{}) {}
 
+// NewWatcher creates a new watcher instance with a noop logger.
 func NewWatcher() *Watcher {
 	return &Watcher{
-		LogFunc: noop,
+		LogFunc:  noop,
+		Interval: 500,
 	}
 }
 
@@ -28,12 +30,15 @@ func NewWatcher() *Watcher {
 // update their results.
 func (w *Watcher) Run() {
 	for {
-		time.Sleep(time.Millisecond * 500)
+		if w.closed {
+			break
+		}
+		time.Sleep(time.Millisecond * time.Duration(w.Interval))
 		l := len(w.Inputs)
 		w.LogFunc("Checking %d items...\n", l)
 		w.DoRemoval()
 		w.DoUpdate()
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * time.Duration(w.Interval))
 	}
 }
 
@@ -45,10 +50,13 @@ func (w *Watcher) DoUpdate() {
 		}
 		newStats, err := i.GetStats()
 		if err == nil {
-			if w.isSameAs(i.KnownStats, newStats) == false {
+			if i.LastErr != nil || w.isSameAs(i.KnownStats, newStats) == false {
 				i.Update(newStats)
 			}
 		} else {
+			if i.OnErrored != nil {
+				i.OnErrored(i, err)
+			}
 			w.LogFunc("Failed to resolve: %v", err)
 		}
 	}
@@ -56,28 +64,19 @@ func (w *Watcher) DoUpdate() {
 
 // DoRemoval run a single loop over watched inputs to remove them.
 func (w *Watcher) DoRemoval() {
-	deletion := make([]*Input, 0)
-	for _, i := range w.Inputs {
+	deletion := make([]int, 0)
+	for e, i := range w.Inputs {
 		if i.MarkedForDeletion {
-			deletion = append(deletion, i)
+			deletion = append(deletion, e)
 		}
 	}
 	for i := 0; i < len(deletion); i++ {
-		index := -1
-		for e := 0; e < len(w.Inputs); e++ {
-			if w.Inputs[e] == deletion[i] {
-				index = e
-				break
-			}
-		}
-		if index > -1 {
-			w.Inputs = append(w.Inputs[:index], w.Inputs[index+1:]...)
-		}
+		index := deletion[i]
+		w.Inputs = append(w.Inputs[:index], w.Inputs[index+1:]...)
 	}
 	if len(deletion) > 0 {
 		w.LogFunc("Removed %d items\n", len(deletion))
 	}
-	deletion = deletion[0:0]
 }
 
 // Close the watcher, ends Run loop.
