@@ -10,4 +10,4 @@ postversion: \
   && 666 git push && 666 git push --tags \
   && 666 gh-api-cli create-release -n release -o mh-cbon -r watchnproduce \
    --ver !newversion! -c "changelog ghrelease --version !newversion!" \
---draft !isprerelease!
+   --draft !isprerelease!
