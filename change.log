@@ -1,5 +1,5 @@
 
-0.0.2
+1.0.0
 
   * release: run test
   * watcher(minor): Add new Interval property to set duration delay between checks
