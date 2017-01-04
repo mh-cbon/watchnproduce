@@ -21,7 +21,7 @@ func NewMemoryPointer() *MemoryPointer {
 }
 
 func (m *MemoryPointer) AddStat(id string, mod int64) {
-	s := watchnproduce.Stat{id, mod}
+	s := watchnproduce.Stat{ID: id, Mod: mod}
 	m.StatstoReturn = append(m.StatstoReturn, s)
 }
 
